@@ -24,8 +24,10 @@ public class Game {
     public Game() {
         populateTerrain();
         terrain[0][3] = 64;
-//        terrain[0][1] = 64;
-        terrain[2][3] = 20;
+        terrain[1][3] = 64;
+        terrain[2][3] = 64;
+//        terrain[3][3] = 64;
+//        terrain[2][3] = 20;
 //        generateNewNumber();
     }
 
@@ -67,6 +69,35 @@ public class Game {
     public void mergeCells(int[] cells, Direction direction, int col) {
         if(Arrays.stream(cells).allMatch(s -> s == 0))return;
         var alreadyMultiply = false;
+
+        for(byte j = 0; j <= 2; j++) { // Double iteration to be sure all cells are merged
+            for (var i = (byte) (cells.length - 1); i >= 0; i--) {
+                if (i - 1 >= 0) {
+                    var cell = cells[i];
+                    var previousCell = cells[i - 1];
+                    if (cell != previousCell && cell != 0 && previousCell != 0) continue;
+                    if(cell == 0 && previousCell == 0)continue;
+
+                    if (cell == previousCell) {
+                        cells[i] = cell * 2;
+                        cells[i - 1] = 0;
+                        alreadyMultiply = true;
+                        cellsMergedEvent.merged(i - 1,col,i,col,cells[i],direction, col); //DOWN
+                    } else {
+                        if (cell == 0) {
+                            cells[i] = previousCell;
+                            cells[i - 1] = 0;
+                            cellsMergedEvent.merged(i - 1,col,i,col,previousCell,direction, col); //DOWN
+                            break;
+                        }
+                    }
+
+                }
+            }
+        }
+
+        if(0 == 0)return;
+        // BROKEN CODE
         for (byte j = 0; j < cells.length; j++) {
             for (byte i = 0; i < cells.length; i++) {
                 var cell = cells[i];
@@ -82,9 +113,9 @@ public class Game {
 //                        cellsMergedEvent.merged(col,cells.length-1-i,col,cells.length-2-i,cells[cells.length-1],direction); // left // OK
 //                        cellsMergedEvent.merged(col-i, col, col-i-1, col, cells[i + 1], direction); // UP,  ok
                         if(cell != 0){
-                            cellsMergedEvent.merged(i, col, i+1, col, cells[i + 1], direction); // DOWN // OK
+                            cellsMergedEvent.merged(i, col, i+1, col, cells[i + 1], direction,col); // DOWN // OK
                         }else{
-                            cellsMergedEvent.merged(i+1, col, i+2, col, cells[i + 1], direction); // DOWN // OK
+                            cellsMergedEvent.merged(i+1, col, i+2, col, cells[i + 1], direction, col); // DOWN // OK
                         }
 
                     } else if (!alreadyMultiply) {
@@ -94,7 +125,7 @@ public class Game {
 
 //                        cellsMergedEvent.merged(col,cells.length-1-i,col,cells.length-2-i,cells[cells.length-1],direction); // left // seems OK
 //                        cellsMergedEvent.merged(col-i, col, col-i-1, col, cells[i + 1], direction); // UP,  ok
-                        cellsMergedEvent.merged(i, col, i+1, col, cells[i + 1], direction);// DOWN // OK
+                        cellsMergedEvent.merged(i, col, i+1, col, cells[i + 1], direction, col);// DOWN // OK
 
                     }
 

@@ -14,10 +14,7 @@ import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 
 public class GameView extends StackPane implements Initializable {
@@ -28,6 +25,8 @@ public class GameView extends StackPane implements Initializable {
     private final Game game;
 
     private final List<List<TranslateTransition>> animatedCellList = new ArrayList<>();
+
+    public static final Map<Integer, List<TranslateTransition>> map = new HashMap<>();
 
     public GameView() {
         game = new Game();
@@ -86,15 +85,15 @@ public class GameView extends StackPane implements Initializable {
                 case RIGHT -> game.move(Game.Direction.RIGHT);
                 case LEFT -> game.move(Game.Direction.LEFT);
             }
-//            update();
-            animateCells();
-            RotatorControl r = new RotatorControl("text");
-            game_GridPane.add(r, 0, 0);
+            update();
+//            animateCells();
+//            RotatorControl r = new RotatorControl("text");
+//            game_GridPane.add(r, 0, 0);
         });
     }
 
     @SuppressWarnings("ConstantConditions")
-    private void buildTransition(int srcRow, int srcCol, int destRow, int destCol, int number, Game.Direction direction) {
+    private void buildTransition(int srcRow, int srcCol, int destRow, int destCol, int number, Game.Direction direction, int id) {
         var sourceCellView = getCellView(srcRow, srcCol);
         var destCellView = getCellView(destRow, destCol);
 
@@ -117,44 +116,27 @@ public class GameView extends StackPane implements Initializable {
             if (newValue == Animation.Status.STOPPED)
                 Platform.runLater(() -> {
                     destCellView.number_Label.setText(String.valueOf(number));
-                    // TODO delete sourceCellView
+
                     game_GridPane.getChildren().remove(sourceCellView);
                 });
             else if (newValue == Animation.Status.RUNNING) {
-                game_GridPane.add(new CellView(), srcCol, srcRow);
+//                game_GridPane.add(new CellView(), srcCol, srcRow);
             }
         });
 
 
         // put transition in list, they will be executed later, when all of all col or row merged
-        if (animatedCellList.size() == 0) {
-            var translateTransitions = new ArrayList<TranslateTransition>();
+        map.compute(id, (integer, translateTransitions) -> {
+            if(translateTransitions == null)translateTransitions = new ArrayList<>();
             translateTransitions.add(translate);
-            animatedCellList.add(translateTransitions);
-            return;
-        } else {
-            if (animatedCellList.get(animatedCellList.size() - 1).size() == 3) {
-                System.out.println("");
-                var translateTransitions = new ArrayList<TranslateTransition>();
-                translateTransitions.add(translate);
-                animatedCellList.add(translateTransitions);
-                return;
-            }
-        }
-        for (List<TranslateTransition> translateTransitions : animatedCellList) {
-            if (translateTransitions == null) translateTransitions = new ArrayList<>();
-            if (translateTransitions.size() < 3) {
-                translateTransitions.add(translate);
-            }
-        }
-
+            return translateTransitions;
+        });
     }
 
     private void animateCells() {
-
-        for (List<TranslateTransition> translateTransitions : animatedCellList) {
+        for (var entry : map.entrySet()) {
             new Thread(() -> {
-                for (TranslateTransition translateTransition : translateTransitions) {
+                for (TranslateTransition translateTransition : entry.getValue()) {
                     Semaphore semaphore = new Semaphore(0);
                     translateTransition.setOnFinished(event -> {
                         semaphore.release();
