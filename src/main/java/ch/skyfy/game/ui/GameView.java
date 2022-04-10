@@ -100,11 +100,11 @@ public class GameView extends StackPane implements Initializable {
         var animatedCellView = new CellView();
         animatedCellView.number_Label.setText(sourceCellView.number_Label.getText());
         animatedCellView.setViewOrder(1);
-        animatedCellView.setBackground(new Background(new BackgroundFill(Color.valueOf("#B88400"), new CornerRadii(0), new Insets(0))));
+//        animatedCellView.setBackground(new Background(new BackgroundFill(Color.valueOf("#B88400"), new CornerRadii(0), new Insets(0))));
         game_GridPane.add(animatedCellView, destCol, destRow);
 
         var translate = new TranslateTransition();
-        translate.setDuration(Duration.millis(1000));
+        translate.setDuration(Duration.millis(40));
 
         if (direction == Game.Direction.DOWN) {
             translate.setByY(sourceCellView.getHeight());
@@ -140,7 +140,7 @@ public class GameView extends StackPane implements Initializable {
 
     private void buildNewNumberTransition(int row, int col, int newNumber){
         var text = Objects.requireNonNull(getCellView(row, col)).number_Label;
-        var tr = new TextSizeTransition(text, 0, 40, Duration.millis(600));
+        var tr = new TextSizeTransition(text, 0, 40, Duration.millis(100));
         tr.statusProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue == Animation.Status.RUNNING){
                 text.setText(String.valueOf(newNumber));
@@ -164,11 +164,24 @@ public class GameView extends StackPane implements Initializable {
         });
     }
 
+    private List<Thread> animationThread = new ArrayList<>();
+
+    private boolean animationFinished(){
+        for (Thread thread : animationThread) {
+            if(thread.isAlive())return false;
+        }
+        return true;
+    }
+
     private void playTransition() {
+        if(!animationFinished()) return;
+
+        animationThread.clear();
+
         for (var entry : map.entrySet()) {
-            new Thread(() -> {
+            var t = new Thread(() -> {
                 for (Transition transition : entry.getValue()) {
-                    Semaphore semaphore = new Semaphore(0);
+                    var semaphore = new Semaphore(0);
                     transition.setOnFinished(event -> {
                         semaphore.release();
                     });
@@ -178,13 +191,13 @@ public class GameView extends StackPane implements Initializable {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    System.out.println("unlocked");
                 }
             }) {{
                 setDaemon(true);
-            }}.start();
+            }};
+            t.start();
+            animationThread.add(t);
         }
-
 
     }
 
