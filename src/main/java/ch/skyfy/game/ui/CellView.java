@@ -33,6 +33,7 @@ public class CellView extends StackPane implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        this.setBackground(new Background(new BackgroundFill(Color.rgb(increaseColor, 190, increaseColor), new CornerRadii(0), new Insets(10))));
+//        this.setBackground(new Background(new BackgroundFill(Color.rgb(increaseColor, 190, increaseColor), new CornerRadii(0), new Insets(10))));
+        this.setBackground(new Background(new BackgroundFill(Color.valueOf("#FFCB47"), new CornerRadii(0), new Insets(0))));
     }
 }

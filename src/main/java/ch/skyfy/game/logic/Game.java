@@ -1,11 +1,11 @@
 package ch.skyfy.game.logic;
 
-import ch.skyfy.game.Cell;
 import ch.skyfy.game.CellsMergedEvent;
 import ch.skyfy.game.NewNumberEvent;
 
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Random;
 
 public class Game {
 
@@ -23,9 +23,16 @@ public class Game {
 
     public Game() {
         populateTerrain();
-        terrain[0][3] = 64;
-        terrain[1][3] = 64;
-        terrain[2][3] = 64;
+//        terrain[0][0] = 2;
+//        terrain[0][1] = 2;
+//        terrain[0][2] = 4;
+//        terrain[0][3] = 8;
+//        terrain[0][2] = 64;
+//        terrain[0][3] = 64;
+        terrain[0][3] = 2;
+        terrain[1][3] = 2;
+        terrain[2][3] = 4;
+        terrain[3][3] = 8;
 //        terrain[3][3] = 64;
 //        terrain[2][3] = 20;
 //        generateNewNumber();
@@ -59,36 +66,75 @@ public class Game {
                 } else {
                     var cellsWithRemoved0 = Arrays.stream(cells).filter(num -> num != 0).toArray();
                     for (byte j = 0; j < cells.length; j++)
-                        terrain[j][i] =  ((j > cellsWithRemoved0.length - 1) ? 0 : cellsWithRemoved0[j]);
+                        terrain[j][i] = ((j > cellsWithRemoved0.length - 1) ? 0 : cellsWithRemoved0[j]);
                 }
             }
         }
         generateNewNumberIfRequired(terrainCopy);
     }
 
-    public void mergeCells(int[] cells, Direction direction, int col) {
-        if(Arrays.stream(cells).allMatch(s -> s == 0))return;
-        var alreadyMultiply = false;
+    private int[] reverseArray(int[] array) {
+        var cellsCopy = new int[4];
+        for (int i = array.length - 1; i >= 0; i--) {
+            cellsCopy[array.length - 1 - i] = array[i];
+        }
+        return cellsCopy;
+    }
 
-        for(byte j = 0; j <= 2; j++) { // Double iteration to be sure all cells are merged
-            for (var i = (byte) (cells.length - 1); i >= 0; i--) {
+    public void mergeCells(int[] cells, Direction direction, int colOrRow) {
+        if (Arrays.stream(cells).allMatch(s -> s == 0)) return;
+        var alreadyMultiply2 = new ArrayList<Integer>(2);
+
+        if (direction == Direction.UP || direction == Direction.LEFT) {
+            cells = reverseArray(cells);
+        }
+
+        for (int j = 0; j <= 4; j++) { // Double iteration to be sure all cells are merged
+            for (var i =  (cells.length - 1); i >= 0; i--) {
                 if (i - 1 >= 0) {
                     var cell = cells[i];
                     var previousCell = cells[i - 1];
                     if (cell != previousCell && cell != 0 && previousCell != 0) continue;
-                    if(cell == 0 && previousCell == 0)continue;
+                    if (cell == 0 && previousCell == 0) continue;
+
+//                    if (alreadyMultiply2.contains(i) || alreadyMultiply2.contains((i-1))) continue; // cell can be multiplied only one time
 
                     if (cell == previousCell) {
                         cells[i] = cell * 2;
                         cells[i - 1] = 0;
-                        alreadyMultiply = true;
-                        cellsMergedEvent.merged(i - 1,col,i,col,cells[i],direction, col); //DOWN
+                        if(alreadyMultiply2.contains(i) || alreadyMultiply2.contains(i-1))continue;
+//                        if(alreadyMultiply2.contains(i))continue;
+                        alreadyMultiply2.add(i);
+                        if (direction == Direction.UP) {
+                            cellsMergedEvent.merged(cells.length - i, colOrRow, cells.length - i - 1, colOrRow, cells[i], direction, colOrRow); // UP,  ok
+                            break;
+                        } else if (direction == Direction.DOWN) {
+                            cellsMergedEvent.merged(i - 1, colOrRow, i, colOrRow, cells[i], direction, colOrRow); //DOWN
+
+                        } else if (direction == Direction.RIGHT) {
+                            cellsMergedEvent.merged(colOrRow, i - 1, colOrRow, i, cells[i], direction, colOrRow); // RIGHT
+
+                        } else if (direction == Direction.LEFT) {
+                            cellsMergedEvent.merged(colOrRow, cells.length - i, colOrRow, cells.length - i - 1, cells[i], direction, colOrRow); // UP,  ok
+                            break;
+                        }
                     } else {
                         if (cell == 0) {
                             cells[i] = previousCell;
                             cells[i - 1] = 0;
-                            cellsMergedEvent.merged(i - 1,col,i,col,previousCell,direction, col); //DOWN
-                            break;
+                            if (direction == Direction.UP) {
+                                cellsMergedEvent.merged(cells.length - i, colOrRow, cells.length - i - 1, colOrRow, cells[i], direction, colOrRow); // UP,  ok
+                                break;
+                            } else if (direction == Direction.DOWN) {
+                                cellsMergedEvent.merged(i - 1, colOrRow, i, colOrRow, cells[i], direction, colOrRow); //DOWN
+
+                            } else if (direction == Direction.RIGHT) {
+                                cellsMergedEvent.merged(colOrRow, i - 1, colOrRow, i, cells[i], direction, colOrRow); // RIGHT
+
+                            } else if (direction == Direction.LEFT) {
+                                cellsMergedEvent.merged(colOrRow, cells.length - i, colOrRow, cells.length - i - 1, cells[i], direction, colOrRow); // UP,  ok
+                                break;
+                            }
                         }
                     }
 
@@ -96,43 +142,43 @@ public class Game {
             }
         }
 
-        if(0 == 0)return;
+//        if(0 == 0)return;
         // BROKEN CODE
-        for (byte j = 0; j < cells.length; j++) {
-            for (byte i = 0; i < cells.length; i++) {
-                var cell = cells[i];
-                if (i < cells.length - 1) {
-                    var nextCell = cells[i + 1];
-                    if (!Objects.equals(cell, nextCell) && cell != 0 && nextCell != 0) continue;
-
-                    if (cell == 0 || nextCell == 0) {
-//                        if(cell == 0 && nextCell == 0)continue;
-                        cells[i + 1] = Stream.of(cell, nextCell).min((o1, o2) -> Integer.compare(o2, o1)).get();
-                        cells[i] = 0;
-
-//                        cellsMergedEvent.merged(col,cells.length-1-i,col,cells.length-2-i,cells[cells.length-1],direction); // left // OK
-//                        cellsMergedEvent.merged(col-i, col, col-i-1, col, cells[i + 1], direction); // UP,  ok
-                        if(cell != 0){
-                            cellsMergedEvent.merged(i, col, i+1, col, cells[i + 1], direction,col); // DOWN // OK
-                        }else{
-                            cellsMergedEvent.merged(i+1, col, i+2, col, cells[i + 1], direction, col); // DOWN // OK
-                        }
-
-                    } else if (!alreadyMultiply) {
-                        cells[i + 1] = (nextCell * 2);
-                        cells[i] = 0;
-                        alreadyMultiply = true;
-
-//                        cellsMergedEvent.merged(col,cells.length-1-i,col,cells.length-2-i,cells[cells.length-1],direction); // left // seems OK
-//                        cellsMergedEvent.merged(col-i, col, col-i-1, col, cells[i + 1], direction); // UP,  ok
-                        cellsMergedEvent.merged(i, col, i+1, col, cells[i + 1], direction, col);// DOWN // OK
-
-                    }
-
-
-                }
-            }
-        }
+//        for (byte j = 0; j < cells.length; j++) {
+//            for (byte i = 0; i < cells.length; i++) {
+//                var cell = cells[i];
+//                if (i < cells.length - 1) {
+//                    var nextCell = cells[i + 1];
+//                    if (!Objects.equals(cell, nextCell) && cell != 0 && nextCell != 0) continue;
+//
+//                    if (cell == 0 || nextCell == 0) {
+////                        if(cell == 0 && nextCell == 0)continue;
+//                        cells[i + 1] = Stream.of(cell, nextCell).min((o1, o2) -> Integer.compare(o2, o1)).get();
+//                        cells[i] = 0;
+//
+////                        cellsMergedEvent.merged(col,cells.length-1-i,col,cells.length-2-i,cells[cells.length-1],direction); // left // OK
+////                        cellsMergedEvent.merged(col-i, col, col-i-1, col, cells[i + 1], direction); // UP,  ok
+//                        if(cell != 0){
+//                            cellsMergedEvent.merged(i, col, i+1, col, cells[i + 1], direction,col); // DOWN // OK
+//                        }else{
+//                            cellsMergedEvent.merged(i+1, col, i+2, col, cells[i + 1], direction, col); // DOWN // OK
+//                        }
+//
+//                    } else if (!alreadyMultiply) {
+//                        cells[i + 1] = (nextCell * 2);
+//                        cells[i] = 0;
+//                        alreadyMultiply = true;
+//
+////                        cellsMergedEvent.merged(col,cells.length-1-i,col,cells.length-2-i,cells[cells.length-1],direction); // left // seems OK
+////                        cellsMergedEvent.merged(col-i, col, col-i-1, col, cells[i + 1], direction); // UP,  ok
+//                        cellsMergedEvent.merged(i, col, i+1, col, cells[i + 1], direction, col);// DOWN // OK
+//
+//                    }
+//
+//
+//                }
+//            }
+//        }
     }
 
     public void generateNewNumberIfRequired(int[][] oldTerrain) {
