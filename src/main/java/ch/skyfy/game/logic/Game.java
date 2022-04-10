@@ -29,10 +29,12 @@ public class Game {
 //        terrain[0][3] = 8;
 //        terrain[0][2] = 64;
 //        terrain[0][3] = 64;
+
         terrain[0][3] = 2;
         terrain[1][3] = 2;
-        terrain[2][3] = 4;
-        terrain[3][3] = 8;
+        terrain[2][3] = 2;
+        terrain[3][3] = 2;
+
 //        terrain[3][3] = 64;
 //        terrain[2][3] = 20;
 //        generateNewNumber();
@@ -90,30 +92,36 @@ public class Game {
         }
 
         for (int j = 0; j <= 4; j++) { // Double iteration to be sure all cells are merged
-            for (var i =  (cells.length - 1); i >= 0; i--) {
+            for (var i = (cells.length - 1); i >= 0; i--) {
                 if (i - 1 >= 0) {
                     var cell = cells[i];
                     var previousCell = cells[i - 1];
+
                     if (cell != previousCell && cell != 0 && previousCell != 0) continue;
                     if (cell == 0 && previousCell == 0) continue;
 
-//                    if (alreadyMultiply2.contains(i) || alreadyMultiply2.contains((i-1))) continue; // cell can be multiplied only one time
-
                     if (cell == previousCell) {
+
+                        // Check for merged rule (a cell can merge only one time)
+                        if (direction == Direction.DOWN || direction == Direction.RIGHT) {
+                            if (alreadyMultiply2.contains(i - 1)) continue;
+                            alreadyMultiply2.add(i);
+                        } else {
+                            if (alreadyMultiply2.contains(cells.length - i - 1)) continue;
+                            alreadyMultiply2.add(cells.length - i - 1);
+                        }
+
                         cells[i] = cell * 2;
                         cells[i - 1] = 0;
-                        if(alreadyMultiply2.contains(i) || alreadyMultiply2.contains(i-1))continue;
-//                        if(alreadyMultiply2.contains(i))continue;
-                        alreadyMultiply2.add(i);
                         if (direction == Direction.UP) {
                             cellsMergedEvent.merged(cells.length - i, colOrRow, cells.length - i - 1, colOrRow, cells[i], direction, colOrRow); // UP,  ok
+//                            terrain[j][cells.length - i - 1] = cell * 2;
+//                            terrain[j][cells.length - i] = 0;
                             break;
                         } else if (direction == Direction.DOWN) {
                             cellsMergedEvent.merged(i - 1, colOrRow, i, colOrRow, cells[i], direction, colOrRow); //DOWN
-
                         } else if (direction == Direction.RIGHT) {
                             cellsMergedEvent.merged(colOrRow, i - 1, colOrRow, i, cells[i], direction, colOrRow); // RIGHT
-
                         } else if (direction == Direction.LEFT) {
                             cellsMergedEvent.merged(colOrRow, cells.length - i, colOrRow, cells.length - i - 1, cells[i], direction, colOrRow); // UP,  ok
                             break;
@@ -124,13 +132,13 @@ public class Game {
                             cells[i - 1] = 0;
                             if (direction == Direction.UP) {
                                 cellsMergedEvent.merged(cells.length - i, colOrRow, cells.length - i - 1, colOrRow, cells[i], direction, colOrRow); // UP,  ok
+//                                terrain[j][cells.length - i - 1] = previousCell;
+//                                terrain[j][cells.length - i] = 0;
                                 break;
                             } else if (direction == Direction.DOWN) {
                                 cellsMergedEvent.merged(i - 1, colOrRow, i, colOrRow, cells[i], direction, colOrRow); //DOWN
-
                             } else if (direction == Direction.RIGHT) {
                                 cellsMergedEvent.merged(colOrRow, i - 1, colOrRow, i, cells[i], direction, colOrRow); // RIGHT
-
                             } else if (direction == Direction.LEFT) {
                                 cellsMergedEvent.merged(colOrRow, cells.length - i, colOrRow, cells.length - i - 1, cells[i], direction, colOrRow); // UP,  ok
                                 break;
