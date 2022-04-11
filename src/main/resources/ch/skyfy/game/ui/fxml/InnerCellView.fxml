@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.text.Font?>
-
-
-<fx:root fx:id="inner_StackPane" type="StackPane" prefHeight="400.0" prefWidth="600.0" stylesheets="@../css/InnerCellView.css"
+<fx:root fx:id="inner_StackPane" type="StackPane" stylesheets="@../css/InnerCellView.css"
          xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
-   <Label fx:id="number_Label" text="0">
-      <font>
-         <Font size="34.0"/>
-      </font>
-   </Label>
+    <Label fx:id="number_Label" text="0">
+    </Label>
 </fx:root>

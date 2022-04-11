@@ -2,7 +2,7 @@
 
 <?import javafx.scene.layout.StackPane?>
 <?import ch.skyfy.game.ui.InnerCellView?>
-<fx:root fx:id="root_StackPane" prefHeight="100.0" prefWidth="100.0" stylesheets="@../css/CellView.css" type="StackPane"
+<fx:root fx:id="root_StackPane" stylesheets="@../css/CellView.css" type="StackPane"
          xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
    <InnerCellView fx:id="innerCellView"/>
 </fx:root>

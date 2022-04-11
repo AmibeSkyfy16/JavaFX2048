@@ -1,4 +1,5 @@
 #root_StackPane{
-    -fx-background-color: #ffb703;
+    /*-fx-background-color: #ffb703;*/
+    -fx-background-color: rgba(0, 0, 0, 0.0);
     -fx-padding: 10;
 }

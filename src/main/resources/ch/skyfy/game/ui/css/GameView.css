@@ -1,3 +1,10 @@
 #root_StackPane{
-    /*-fx-background-color: ;*/
+    -fx-background-color: #B7E4C7;
+}
+
+#game_GridPane{
+    /*-fx-background-color: #ffb703;*/
+    -fx-background-color: #52B788;
+    -fx-background-radius: 45;
+    -fx-padding: 20;
 }

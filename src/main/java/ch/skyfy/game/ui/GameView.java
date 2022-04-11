@@ -8,13 +8,14 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.HPos;
 import javafx.geometry.VPos;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.util.Duration;
 
 import java.net.URL;
-import java.util.*;
-import java.util.concurrent.Semaphore;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GameView extends StackPane implements Initializable {
@@ -24,8 +25,7 @@ public class GameView extends StackPane implements Initializable {
 
     private final Game game;
 
-    public static final Map<Integer, List<Transition>> map = new HashMap<>();
-    public static final Map<Integer, SequentialTransition> mapTest = new HashMap<>();
+    public final Map<Integer, SequentialTransition> animations = new HashMap<>();
 
     private final AtomicBoolean animationFinished = new AtomicBoolean(true);
 
@@ -46,18 +46,33 @@ public class GameView extends StackPane implements Initializable {
     private void buildGameGridPane() {
         this.root_GridPane.setFocusTraversable(true);
         var percent = 100.0 / 4.0;
-        for (int i = 0; i < game_GridPane.getColumnConstraints().size(); i++) {
-            var columnConstraint = game_GridPane.getColumnConstraints().get(i);
-            columnConstraint.setPercentWidth(percent);
-            columnConstraint.setHalignment(HPos.CENTER);
-            for (int i1 = 0; i1 < game_GridPane.getRowConstraints().size(); i1++) {
-                var rowConstraint = game_GridPane.getRowConstraints().get(i1);
-                rowConstraint.setPercentHeight(percent);
-                rowConstraint.setValignment(VPos.CENTER);
-                var cell = new CellView();
-                game_GridPane.add(cell, i, i1);
-            }
+
+        // Create col and row
+        for (int i = 0; i < 4; i++) {
+            var c = new ColumnConstraints();
+            c.setPercentWidth(percent);
+            c.setMinWidth(USE_COMPUTED_SIZE);
+            c.setMaxWidth(USE_COMPUTED_SIZE);
+            c.setPrefWidth(USE_COMPUTED_SIZE);
+            c.setHalignment(HPos.CENTER);
+            c.setHgrow(Priority.SOMETIMES);
+            game_GridPane.getColumnConstraints().add(c);
         }
+        for (int i1 = 0; i1 < 4; i1++) {
+            var r = new RowConstraints();
+            r.setPercentHeight(percent);
+            r.setMinHeight(USE_COMPUTED_SIZE);
+            r.setMaxHeight(USE_COMPUTED_SIZE);
+            r.setPrefHeight(USE_COMPUTED_SIZE);
+            r.setValignment(VPos.CENTER);
+            r.setVgrow(Priority.SOMETIMES);
+            game_GridPane.getRowConstraints().add(r);
+        }
+
+        // Adding cell
+        for (int i = 0; i < game_GridPane.getColumnConstraints().size(); i++)
+            for (int i1 = 0; i1 < game_GridPane.getRowConstraints().size(); i1++)
+                game_GridPane.add(new CellView(), i, i1);
     }
 
     private void update() {
@@ -76,8 +91,8 @@ public class GameView extends StackPane implements Initializable {
 
     private void registerEvents() {
         this.setOnKeyPressed(event -> {
-            if(!animationFinished.getAndSet(true)) return;
-            mapTest.clear();
+            if (!animationFinished.getAndSet(true)) return;
+            animations.clear();
             switch (event.getCode()) {
                 case DOWN -> game.move(Game.Direction.DOWN);
                 case UP -> game.move(Game.Direction.UP);
@@ -94,13 +109,7 @@ public class GameView extends StackPane implements Initializable {
         var sourceCellView = getCellView(srcRow, srcCol);
         var destCellView = getCellView(destRow, destCol);
 
-
-        System.out.println("sourceView WIDTH " + sourceCellView.innerCellView.getWidth());
-        System.out.println("sourceView HEIGHT " + sourceCellView.innerCellView.getHeight());
-
         var innerCellView = new InnerCellView();
-        System.out.println("innerCellView WIDTH " + innerCellView.getWidth());
-        System.out.println("innerCellView HEIGHT " + innerCellView.getHeight());
 //        innerCellView.getStylesheets().clear();
 //        innerCellView.setBackground(new Background(new BackgroundFill(Color.valueOf("#B88400"), new CornerRadii(20), new Insets(0))));
 
@@ -110,9 +119,8 @@ public class GameView extends StackPane implements Initializable {
         innerCellView.setPrefWidth(sourceCellView.innerCellView.getWidth());
         innerCellView.number_Label.setText(sourceCellView.innerCellView.number_Label.getText());
 
-
         var translate = new TranslateTransition();
-        translate.setDuration(Duration.millis(200));
+        translate.setDuration(Duration.millis(150));
 
         if (direction == Game.Direction.DOWN) {
             translate.setByY(sourceCellView.getHeight());
@@ -161,6 +169,7 @@ public class GameView extends StackPane implements Initializable {
     }
 
     private Transition generateNewNumberTransition = null;
+
     private void addTransition(int id, Transition transition) {
         // Adding the newNumberAnimation
         // This animation will be the last animation
@@ -169,16 +178,16 @@ public class GameView extends StackPane implements Initializable {
             generateNewNumberTransition.setOnFinished(event -> animationFinished.set(true));
             return;
         }
-        mapTest.compute(id, (integer, sequentialTransition) -> {
-            if(sequentialTransition == null)sequentialTransition = new SequentialTransition();
+        animations.compute(id, (integer, sequentialTransition) -> {
+            if (sequentialTransition == null) sequentialTransition = new SequentialTransition();
             sequentialTransition.getChildren().add(transition);
             return sequentialTransition;
         });
     }
 
-    private void playTransitionTest(){
+    private void playTransitionTest() {
         var p = new ParallelTransition();
-        p.getChildren().addAll(mapTest.values());
+        p.getChildren().addAll(animations.values());
         p.setOnFinished(event -> generateNewNumberTransition.play());
         p.play();
     }
