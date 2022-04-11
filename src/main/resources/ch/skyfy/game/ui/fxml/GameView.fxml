@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 
-<fx:root prefHeight="400.0" prefWidth="600.0" stylesheets="@../css/Game.css" type="StackPane" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
+<fx:root fx:id="root_StackPane" prefHeight="400.0" prefWidth="600.0" stylesheets="@../css/GameView.css" type="StackPane" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <GridPane fx:id="root_GridPane">
             <columnConstraints>

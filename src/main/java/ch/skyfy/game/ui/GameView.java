@@ -1,23 +1,21 @@
 package ch.skyfy.game.ui;
 
-import ch.skyfy.game.Main;
 import ch.skyfy.game.logic.Game;
 import ch.skyfy.game.ui.utils.FXMLUtils;
-import javafx.animation.Animation;
-import javafx.animation.Transition;
-import javafx.animation.TranslateTransition;
+import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Insets;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
+import javafx.geometry.HPos;
+import javafx.geometry.VPos;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Semaphore;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GameView extends StackPane implements Initializable {
 
@@ -26,20 +24,16 @@ public class GameView extends StackPane implements Initializable {
 
     private final Game game;
 
-    private final List<List<Transition>> animatedCellList = new ArrayList<>();
-
     public static final Map<Integer, List<Transition>> map = new HashMap<>();
+    public static final Map<Integer, SequentialTransition> mapTest = new HashMap<>();
 
-    public enum EventType{
-        MERGED,
-        NEW_NUMBER
-    }
+    private final AtomicBoolean animationFinished = new AtomicBoolean(true);
 
     public GameView() {
         game = new Game();
         game.cellsMergedEvent = this::buildMergeTransition;
         game.newNumberEvent = this::buildNewNumberTransition;
-        FXMLUtils.loadFXML(Main.class, "ui/fxml/Game.fxml", this);
+        FXMLUtils.loadFXML(this);
     }
 
     @Override
@@ -55,9 +49,11 @@ public class GameView extends StackPane implements Initializable {
         for (int i = 0; i < game_GridPane.getColumnConstraints().size(); i++) {
             var columnConstraint = game_GridPane.getColumnConstraints().get(i);
             columnConstraint.setPercentWidth(percent);
+            columnConstraint.setHalignment(HPos.CENTER);
             for (int i1 = 0; i1 < game_GridPane.getRowConstraints().size(); i1++) {
                 var rowConstraint = game_GridPane.getRowConstraints().get(i1);
                 rowConstraint.setPercentHeight(percent);
+                rowConstraint.setValignment(VPos.CENTER);
                 var cell = new CellView();
                 game_GridPane.add(cell, i, i1);
             }
@@ -70,7 +66,7 @@ public class GameView extends StackPane implements Initializable {
                 for (var child : game_GridPane.getChildren()) {
                     if (child instanceof CellView cellView) {
                         if (GridPane.getRowIndex(child) == row && GridPane.getColumnIndex(child) == col) {
-                            cellView.number_Label.setText(String.valueOf(game.terrain[row][col]));
+                            cellView.innerCellView.number_Label.setText(String.valueOf(game.terrain[row][col]));
                         }
                     }
                 }
@@ -80,7 +76,15 @@ public class GameView extends StackPane implements Initializable {
 
     private void registerEvents() {
         this.setOnKeyPressed(event -> {
-            map.clear();
+//            if (!animationFinished()) return;
+//            map.clear();
+            if(!animationFinished.get()){
+                System.out.println("NOT FINISHED");
+                return;
+            }
+            animationFinished.set(false);
+            mapTest.clear();
+//            animationThread.clear();
             switch (event.getCode()) {
                 case DOWN -> game.move(Game.Direction.DOWN);
                 case UP -> game.move(Game.Direction.UP);
@@ -88,7 +92,8 @@ public class GameView extends StackPane implements Initializable {
                 case LEFT -> game.move(Game.Direction.LEFT);
             }
 //            update();
-            playTransition();
+//            playTransition();
+            playTransitionTest();
         });
     }
 
@@ -97,94 +102,121 @@ public class GameView extends StackPane implements Initializable {
         var sourceCellView = getCellView(srcRow, srcCol);
         var destCellView = getCellView(destRow, destCol);
 
-        var animatedCellView = new CellView();
-        animatedCellView.number_Label.setText(sourceCellView.number_Label.getText());
-        animatedCellView.setViewOrder(1);
-//        animatedCellView.setBackground(new Background(new BackgroundFill(Color.valueOf("#B88400"), new CornerRadii(0), new Insets(0))));
-        game_GridPane.add(animatedCellView, destCol, destRow);
+
+        System.out.println("sourceView WIDTH " + sourceCellView.innerCellView.getWidth());
+        System.out.println("sourceView HEIGHT " + sourceCellView.innerCellView.getHeight());
+
+        var innerCellView = new InnerCellView();
+        System.out.println("innerCellView WIDTH " + innerCellView.getWidth());
+        System.out.println("innerCellView HEIGHT " + innerCellView.getHeight());
+//        innerCellView.getStylesheets().clear();
+//        innerCellView.setBackground(new Background(new BackgroundFill(Color.valueOf("#B88400"), new CornerRadii(20), new Insets(0))));
+
+        innerCellView.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+        innerCellView.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
+        innerCellView.setPrefHeight(sourceCellView.innerCellView.getHeight());
+        innerCellView.setPrefWidth(sourceCellView.innerCellView.getWidth());
+        innerCellView.number_Label.setText(sourceCellView.innerCellView.number_Label.getText());
+
 
         var translate = new TranslateTransition();
-        translate.setDuration(Duration.millis(40));
+        translate.setDuration(Duration.millis(200));
 
         if (direction == Game.Direction.DOWN) {
             translate.setByY(sourceCellView.getHeight());
-            animatedCellView.setTranslateY(-sourceCellView.getHeight());
+            innerCellView.setTranslateY(-sourceCellView.getHeight());
         } else if (direction == Game.Direction.UP) {
             translate.setByY(-sourceCellView.getHeight());
-            animatedCellView.setTranslateY(sourceCellView.getHeight());
+            innerCellView.setTranslateY(sourceCellView.getHeight());
         } else if (direction == Game.Direction.RIGHT) {
             translate.setByX(sourceCellView.getWidth());
-            animatedCellView.setTranslateX(-sourceCellView.getWidth());
+            innerCellView.setTranslateX(-sourceCellView.getWidth());
         } else {
             translate.setByX(-sourceCellView.getWidth());
-            animatedCellView.setTranslateX(sourceCellView.getWidth());
+            innerCellView.setTranslateX(sourceCellView.getWidth());
         }
 
-        translate.setNode(animatedCellView);
+        translate.setNode(innerCellView);
 
         translate.statusProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == Animation.Status.STOPPED)
                 Platform.runLater(() -> {
-                    destCellView.number_Label.setText(String.valueOf(number));
-                    game_GridPane.getChildren().remove(animatedCellView);
+                    destCellView.innerCellView.number_Label.setText(String.valueOf(number));
+                    game_GridPane.getChildren().remove(innerCellView);
                 });
             else if (newValue == Animation.Status.RUNNING) {
-                animatedCellView.number_Label.setText(String.valueOf(sourceCellView.number_Label.getText()));
-                sourceCellView.number_Label.setText("0");
-                animatedCellView.setViewOrder(-1);
+                Platform.runLater(() -> {
+                    game_GridPane.add(innerCellView, destCol, destRow);
+                    innerCellView.number_Label.setText(String.valueOf(sourceCellView.innerCellView.number_Label.getText()));
+                    sourceCellView.innerCellView.number_Label.setText("0");
+                    innerCellView.setViewOrder(-1);
+                });
             }
         });
 
         addTransition(id, translate);
     }
 
-    private void buildNewNumberTransition(int row, int col, int newNumber){
-        var text = Objects.requireNonNull(getCellView(row, col)).number_Label;
+    private void buildNewNumberTransition(int row, int col, int newNumber) {
+        var text = Objects.requireNonNull(getCellView(row, col)).innerCellView.number_Label;
         var tr = new TextSizeTransition(text, 0, 40, Duration.millis(100));
         tr.statusProperty().addListener((observable, oldValue, newValue) -> {
-            if(newValue == Animation.Status.RUNNING){
+            if (newValue == Animation.Status.RUNNING) {
                 text.setText(String.valueOf(newNumber));
             }
         });
         addTransition(-10, tr);
     }
 
-    private void addTransition(int id, Transition transition){
+    private Transition generateNewNumberTransition = null;
+    private void addTransition(int id, Transition transition) {
         // Adding the newNumberAnimation
         // This animation will be the last animation
-        if(id == -10){
-            var greatestList = map.entrySet().stream().sorted(Comparator.comparing(integerListEntry -> integerListEntry.getValue().size(), Comparator.reverseOrder())).findFirst();
+        if (id == -10) {
+//            var greatestList = map.entrySet().stream().sorted(Comparator.comparing(integerListEntry -> integerListEntry.getValue().size(), Comparator.reverseOrder())).findFirst();
+            var greatestList = map.entrySet().stream().max(Comparator.comparing(integerListEntry -> integerListEntry.getValue().size()));
             greatestList.ifPresent(integerListEntry -> integerListEntry.getValue().add(transition));
+
+            generateNewNumberTransition = transition;
+            generateNewNumberTransition.setOnFinished(event -> animationFinished.set(true));
+
             return;
         }
         map.compute(id, (integer, translateTransitions) -> {
-            if(translateTransitions == null)translateTransitions = new ArrayList<>();
+            if (translateTransitions == null) translateTransitions = new ArrayList<>();
             translateTransitions.add(transition);
             return translateTransitions;
         });
+
+        mapTest.compute(id, (integer, sequentialTransition) -> {
+            if(sequentialTransition == null)sequentialTransition = new SequentialTransition();
+            sequentialTransition.getChildren().add(transition);
+            return sequentialTransition;
+        });
     }
 
-    private List<Thread> animationThread = new ArrayList<>();
+    private final List<Thread> animationThread = new ArrayList<>();
 
-    private boolean animationFinished(){
-        for (Thread thread : animationThread) {
-            if(thread.isAlive())return false;
+    private boolean animationFinished() {
+        for (var thread : animationThread) {
+            if (thread.isAlive()) return false;
         }
         return true;
     }
 
+    private void playTransitionTest(){
+        var p = new ParallelTransition();
+        p.getChildren().addAll(mapTest.values());
+        p.setOnFinished(event -> generateNewNumberTransition.play());
+        p.play();
+    }
+
     private void playTransition() {
-        if(!animationFinished()) return;
-
-        animationThread.clear();
-
         for (var entry : map.entrySet()) {
             var t = new Thread(() -> {
                 for (Transition transition : entry.getValue()) {
                     var semaphore = new Semaphore(0);
-                    transition.setOnFinished(event -> {
-                        semaphore.release();
-                    });
+                    transition.setOnFinished(event -> semaphore.release());
                     Platform.runLater(transition::play);
                     try {
                         semaphore.acquire();

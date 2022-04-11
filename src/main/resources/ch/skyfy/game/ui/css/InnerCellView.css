@@ -1,0 +1,11 @@
+#inner_StackPane{
+    -fx-background-color: #023047;
+    -fx-background-radius: 20;
+
+}
+
+#number_Label{
+    -fx-font-family: "JetBrains Mono Medium";
+    -fx-font-size: 48;
+    -fx-text-fill: #f1faee;
+}
