@@ -23,17 +23,22 @@ public class Game {
 
     public Game() {
         populateTerrain();
-        terrain[0][0] = 4;
-        terrain[0][1] = 2;
-        terrain[0][2] = 2;
-        terrain[0][3] = 2;
+
+        // work with contain(i)
+//        terrain[0][0] = 4;
+//        terrain[0][1] = 8;
+//        terrain[0][2] = 8;
+//        terrain[0][3] = 16;
+
+
+
 //        terrain[0][2] = 64;
 //        terrain[0][3] = 64;
 
-//        terrain[0][3] = 2;
-//        terrain[1][3] = 4;
-//        terrain[2][3] = 0;
-//        terrain[3][3] = 2;
+        terrain[0][2] = 4;
+        terrain[1][2] = 4;
+        terrain[2][2] = 4;
+        terrain[3][2] = 4;
 
 //        terrain[3][0] = 4;
 //        terrain[3][1] = 4;
@@ -78,7 +83,8 @@ public class Game {
                         if (cell == 0 && nextCell == 0) continue;
 
                         if (cell == nextCell) {
-                            if (alreadyMultiply2.contains(i+1)) continue;
+
+                            if (alreadyMultiply2.contains(i) || alreadyMultiply2.contains(i+1)) continue;
                             alreadyMultiply2.add(i);
 
                             cells[i] = cell * 2;
@@ -113,7 +119,7 @@ public class Game {
 
                         if (cell == previousCell) {
 
-                            if (alreadyMultiply2.contains(i - 1)) continue;
+                            if (alreadyMultiply2.contains(i) || alreadyMultiply2.contains(i - 1)) continue;
                             alreadyMultiply2.add(i);
 
                             cells[i] = cell * 2;

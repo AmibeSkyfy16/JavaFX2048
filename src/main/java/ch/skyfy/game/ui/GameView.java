@@ -76,15 +76,8 @@ public class GameView extends StackPane implements Initializable {
 
     private void registerEvents() {
         this.setOnKeyPressed(event -> {
-//            if (!animationFinished()) return;
-//            map.clear();
-            if(!animationFinished.get()){
-                System.out.println("NOT FINISHED");
-                return;
-            }
-            animationFinished.set(false);
+            if(!animationFinished.getAndSet(true)) return;
             mapTest.clear();
-//            animationThread.clear();
             switch (event.getCode()) {
                 case DOWN -> game.move(Game.Direction.DOWN);
                 case UP -> game.move(Game.Direction.UP);
@@ -92,7 +85,6 @@ public class GameView extends StackPane implements Initializable {
                 case LEFT -> game.move(Game.Direction.LEFT);
             }
 //            update();
-//            playTransition();
             playTransitionTest();
         });
     }
@@ -173,35 +165,15 @@ public class GameView extends StackPane implements Initializable {
         // Adding the newNumberAnimation
         // This animation will be the last animation
         if (id == -10) {
-//            var greatestList = map.entrySet().stream().sorted(Comparator.comparing(integerListEntry -> integerListEntry.getValue().size(), Comparator.reverseOrder())).findFirst();
-            var greatestList = map.entrySet().stream().max(Comparator.comparing(integerListEntry -> integerListEntry.getValue().size()));
-            greatestList.ifPresent(integerListEntry -> integerListEntry.getValue().add(transition));
-
             generateNewNumberTransition = transition;
             generateNewNumberTransition.setOnFinished(event -> animationFinished.set(true));
-
             return;
         }
-        map.compute(id, (integer, translateTransitions) -> {
-            if (translateTransitions == null) translateTransitions = new ArrayList<>();
-            translateTransitions.add(transition);
-            return translateTransitions;
-        });
-
         mapTest.compute(id, (integer, sequentialTransition) -> {
             if(sequentialTransition == null)sequentialTransition = new SequentialTransition();
             sequentialTransition.getChildren().add(transition);
             return sequentialTransition;
         });
-    }
-
-    private final List<Thread> animationThread = new ArrayList<>();
-
-    private boolean animationFinished() {
-        for (var thread : animationThread) {
-            if (thread.isAlive()) return false;
-        }
-        return true;
     }
 
     private void playTransitionTest(){
@@ -211,27 +183,27 @@ public class GameView extends StackPane implements Initializable {
         p.play();
     }
 
-    private void playTransition() {
-        for (var entry : map.entrySet()) {
-            var t = new Thread(() -> {
-                for (Transition transition : entry.getValue()) {
-                    var semaphore = new Semaphore(0);
-                    transition.setOnFinished(event -> semaphore.release());
-                    Platform.runLater(transition::play);
-                    try {
-                        semaphore.acquire();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }) {{
-                setDaemon(true);
-            }};
-            t.start();
-            animationThread.add(t);
-        }
-
-    }
+//    private void playTransition() {
+//        for (var entry : map.entrySet()) {
+//            var t = new Thread(() -> {
+//                for (Transition transition : entry.getValue()) {
+//                    var semaphore = new Semaphore(0);
+//                    transition.setOnFinished(event -> semaphore.release());
+//                    Platform.runLater(transition::play);
+//                    try {
+//                        semaphore.acquire();
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }) {{
+//                setDaemon(true);
+//            }};
+//            t.start();
+//            animationThread.add(t);
+//        }
+//
+//    }
 
     private CellView getCellView(int targetRow, int targetCol) {
         for (byte row = 0; row < game.terrain.length; row++) {
