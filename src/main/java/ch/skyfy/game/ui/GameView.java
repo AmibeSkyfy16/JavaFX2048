@@ -8,6 +8,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.HPos;
 import javafx.geometry.VPos;
+import javafx.scene.CacheHint;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
 
@@ -31,7 +32,7 @@ public class GameView extends StackPane implements Initializable {
 
     public GameView() {
         game = new Game();
-        game.cellsMergedEvent = this::buildMergeTransition;
+        game.cellsMergedEvent = this::buildMergeTransition2;
         game.newNumberEvent = this::buildNewNumberTransition;
         FXMLUtils.loadFXML(this);
     }
@@ -81,7 +82,7 @@ public class GameView extends StackPane implements Initializable {
                 for (var child : game_GridPane.getChildren()) {
                     if (child instanceof CellView cellView) {
                         if (GridPane.getRowIndex(child) == row && GridPane.getColumnIndex(child) == col) {
-                            cellView.innerCellView.number_Label.setText(String.valueOf(game.terrain[row][col]));
+                            cellView.innerCellView.number_Label.setText(String.valueOf(game.terrain[row][col] == 0 ? "" : game.terrain[row][col]));
                         }
                     }
                 }
@@ -99,8 +100,7 @@ public class GameView extends StackPane implements Initializable {
                 case RIGHT -> game.move(Game.Direction.RIGHT);
                 case LEFT -> game.move(Game.Direction.LEFT);
             }
-//            update();
-            playTransitionTest();
+            playTransition();
         });
     }
 
@@ -120,7 +120,7 @@ public class GameView extends StackPane implements Initializable {
         innerCellView.number_Label.setText(sourceCellView.innerCellView.number_Label.getText());
 
         var translate = new TranslateTransition();
-        translate.setDuration(Duration.millis(150));
+        translate.setDuration(Duration.millis(1500));
 
         if (direction == Game.Direction.DOWN) {
             translate.setByY(sourceCellView.getHeight());
@@ -148,8 +148,70 @@ public class GameView extends StackPane implements Initializable {
                 Platform.runLater(() -> {
                     game_GridPane.add(innerCellView, destCol, destRow);
                     innerCellView.number_Label.setText(String.valueOf(sourceCellView.innerCellView.number_Label.getText()));
-                    sourceCellView.innerCellView.number_Label.setText("0");
                     innerCellView.setViewOrder(-1);
+                    sourceCellView.innerCellView.number_Label.setText("0");
+                });
+            }
+        });
+
+        addTransition(id, translate);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    private void buildMergeTransition2(int srcRow, int srcCol, int destRow, int destCol, int number, Game.Direction direction, int id) {
+        var sourceCellView = getCellView(srcRow, srcCol);
+        var destCellView = getCellView(destRow, destCol);
+
+        var innerCellView = new InnerCellView();
+//        innerCellView.getStylesheets().clear();
+//        innerCellView.setBackground(new Background(new BackgroundFill(Color.valueOf("#B88400"), new CornerRadii(20), new Insets(0))));
+
+        innerCellView.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+        innerCellView.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
+        innerCellView.setPrefHeight(sourceCellView.innerCellView.getHeight());
+        innerCellView.setPrefWidth(sourceCellView.innerCellView.getWidth());
+        innerCellView.number_Label.setText(sourceCellView.innerCellView.number_Label.getText());
+
+//        var timeline = new Timeline();
+//        var keyFrame = new KeyFrame(Duration.millis(1000), new KeyValue());
+
+        var translate = new TranslateTransition();
+        translate.setDuration(Duration.millis(1500));
+        translate.setRate(3);
+        translate.setInterpolator(Interpolator.TANGENT(Duration.millis(1500), 9));
+
+        if (direction == Game.Direction.DOWN) {
+            translate.setFromY(-sourceCellView.getHeight());
+            translate.setToY(0);
+            //translate.setByY(sourceCellView.getHeight());
+            //innerCellView.setTranslateY(-sourceCellView.getHeight());
+        } else if (direction == Game.Direction.UP) {
+            translate.setByY(-sourceCellView.getHeight());
+            innerCellView.setTranslateY(sourceCellView.getHeight());
+        } else if (direction == Game.Direction.RIGHT) {
+            translate.setByX(sourceCellView.getWidth());
+            innerCellView.setTranslateX(-sourceCellView.getWidth());
+        } else {
+            translate.setByX(-sourceCellView.getWidth());
+            innerCellView.setTranslateX(sourceCellView.getWidth());
+        }
+
+        innerCellView.setCache(true);
+        innerCellView.setCacheHint(CacheHint.SPEED);
+        translate.setNode(innerCellView);
+
+        translate.statusProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue == Animation.Status.STOPPED)
+                Platform.runLater(() -> {
+                    destCellView.innerCellView.number_Label.setText(String.valueOf(number));
+                    game_GridPane.getChildren().remove(innerCellView);
+                });
+            else if (newValue == Animation.Status.RUNNING) {
+                Platform.runLater(() -> {
+                    game_GridPane.add(innerCellView, destCol, destRow);
+                    innerCellView.number_Label.setText(String.valueOf(sourceCellView.innerCellView.number_Label.getText()));
+                    innerCellView.setViewOrder(-1);
+                    sourceCellView.innerCellView.number_Label.setText("");
                 });
             }
         });
@@ -185,34 +247,12 @@ public class GameView extends StackPane implements Initializable {
         });
     }
 
-    private void playTransitionTest() {
+    private void playTransition() {
         var p = new ParallelTransition();
         p.getChildren().addAll(animations.values());
         p.setOnFinished(event -> generateNewNumberTransition.play());
         p.play();
     }
-
-//    private void playTransition() {
-//        for (var entry : map.entrySet()) {
-//            var t = new Thread(() -> {
-//                for (Transition transition : entry.getValue()) {
-//                    var semaphore = new Semaphore(0);
-//                    transition.setOnFinished(event -> semaphore.release());
-//                    Platform.runLater(transition::play);
-//                    try {
-//                        semaphore.acquire();
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }) {{
-//                setDaemon(true);
-//            }};
-//            t.start();
-//            animationThread.add(t);
-//        }
-//
-//    }
 
     private CellView getCellView(int targetRow, int targetCol) {
         for (byte row = 0; row < game.terrain.length; row++) {
