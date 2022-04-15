@@ -4,19 +4,23 @@ import ch.skyfy.game.logic.Game;
 import ch.skyfy.game.ui.utils.FXMLUtils;
 import javafx.animation.*;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.HPos;
 import javafx.geometry.VPos;
 import javafx.scene.CacheHint;
-import javafx.scene.layout.*;
+import javafx.scene.Node;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
+import javafx.util.Pair;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -27,7 +31,13 @@ public class GameView extends StackPane implements Initializable {
 
     private final Game game;
 
+    /**
+     * Each line will have a SequentialTransition transition
+     * If the key is -10, It's for the latest animation (the newNumberAnimation)
+     */
     public final Map<Integer, SequentialTransition> animations = new HashMap<>();
+
+    private Transition generateNewNumberTransition = null;
 
     private final AtomicBoolean animationFinished = new AtomicBoolean(true);
 
@@ -47,77 +57,45 @@ public class GameView extends StackPane implements Initializable {
 
     private void buildGameGridPane() {
         this.root_GridPane.setFocusTraversable(true);
+
         var percent = 100.0 / 4.0;
 
-        // Create col and row
+        // Adding row and col
         for (int i = 0; i < 4; i++) {
-            var c = new ColumnConstraints();
-            c.setPercentWidth(percent);
-            c.setMinWidth(USE_COMPUTED_SIZE);
-            c.setMaxWidth(USE_COMPUTED_SIZE);
-            c.setPrefWidth(USE_COMPUTED_SIZE);
-            c.setHalignment(HPos.CENTER);
-            c.setHgrow(Priority.SOMETIMES);
-            game_GridPane.getColumnConstraints().add(c);
-            var r = new RowConstraints();
-            r.setPercentHeight(percent);
-            r.setMinHeight(USE_COMPUTED_SIZE);
-            r.setMaxHeight(USE_COMPUTED_SIZE);
-            r.setPrefHeight(USE_COMPUTED_SIZE);
-            r.setValignment(VPos.CENTER);
-            r.setVgrow(Priority.SOMETIMES);
-            game_GridPane.getRowConstraints().add(r);
+            game_GridPane.getColumnConstraints().add(new ColumnConstraints() {{
+                setPercentWidth(percent);
+                setHalignment(HPos.CENTER);
+            }});
+            game_GridPane.getRowConstraints().add(new RowConstraints() {{
+                setPercentHeight(percent);
+                setValignment(VPos.CENTER);
+            }});
         }
 
-
         // Adding cell
-        for (int i = 0; i < game_GridPane.getColumnConstraints().size(); i++)
-            for (int i1 = 0; i1 < game_GridPane.getRowConstraints().size(); i1++) {
-                var col = game_GridPane.getColumnConstraints().get(i);
-                var row = game_GridPane.getRowConstraints().get(i1);
-                var cellView = new CellView();
-                game_GridPane.add(cellView, i, i1);
+        for (byte i = 0; i < game_GridPane.getColumnConstraints().size(); i++)
+            for (byte j = 0; j < game_GridPane.getRowConstraints().size(); j++)
+                game_GridPane.add(new CellView(), i, j);
 
-                // Responsible and square cells
-                // -----------------------TEST 1 ----------------------\\
-//                var b = Bindings.createDoubleBinding(() -> {
-//                    var height = game_GridPane.getHeight() * (row.getPercentHeight() / 100);
-//                    var width = game_GridPane.getWidth() * (col.getPercentWidth() / 100);
-//                    var min = Double.min(height, width);
-//                    return min;
-//                }, game_GridPane.heightProperty(), game_GridPane.widthProperty(), this.widthProperty());
-//                cellView.prefWidthProperty().bind(b);
-//                cellView.prefHeightProperty().bind(b);
-//                cellView.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
-//                cellView.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
-//                game_GridPane.add(cellView, i, i1);
-                // -----------------------TEST 1 ----------------------\\
-                // RESULT -> BUG
+        // Make our app responsive
+        root_GridPane.layoutBoundsProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.getWidth() == 0 || newValue.getHeight() == 0) return;
 
-//                game_GridPane.layoutBoundsProperty().addListener((observable, oldValue, newValue) -> {
-//                    var height = game_GridPane.getHeight() * (row.getPercentHeight() / 100);
-//                    var width = game_GridPane.getWidth() * (col.getPercentWidth() / 100);
-//                    var min = Double.min(height, width);
-//                    cellView.setPrefSize(min, min);
-//                });
-////
-//                cellView.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
-//                cellView.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
-//                game_GridPane.add(cellView, i, i1);
-//                game_GridPane.add(new CellView() {{
-////                    var b = Bindings.createDoubleBinding(() -> {
-////                        var height = game_GridPane.getHeight() * (row.getPercentHeight() / 100);
-////                        var width = game_GridPane.getWidth() * (col.getPercentWidth() / 100);
-////                        var min = Double.min(height, width);
-////                        return min;
-////                    }, game_GridPane.heightProperty(), game_GridPane.widthProperty());
-////                    prefWidthProperty().bind(b);
-////                    prefHeightProperty().bind(b);
-////                    setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
-////                    setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
-//                }}, i, i1);
-            }
+            // Getting rowConstraint and columnConstraint where our game_GridPane is placed
+            var indexes = getRowAndColConstraints(game_GridPane, root_GridPane);
+            if (indexes == null) return;
 
+            var columnConstraints = indexes.getKey();
+            var rowConstraints = indexes.getValue();
+
+            // We calculate the new size of the cell in which our uniformGridPane is placed
+            var cellWidth = newValue.getWidth() * (columnConstraints.getPercentWidth() / 100d);
+            var cellHeight = newValue.getHeight() * (rowConstraints.getPercentHeight() / 100d);
+
+            // To make our uniformGridPane square, we take the smallest size and apply it as width and height
+            var size = Math.min(cellWidth, cellHeight);
+            game_GridPane.setPrefSize(size, size);
+        });
 
     }
 
@@ -149,14 +127,12 @@ public class GameView extends StackPane implements Initializable {
         });
     }
 
-    @SuppressWarnings("ConstantConditions")
+    @SuppressWarnings({"ConstantConditions", "unused"})
     private void buildMergeTransition(int srcRow, int srcCol, int destRow, int destCol, int number, Game.Direction direction, int id) {
         var sourceCellView = getCellView(srcRow, srcCol);
         var destCellView = getCellView(destRow, destCol);
 
         var innerCellView = new InnerCellView();
-//        innerCellView.getStylesheets().clear();
-//        innerCellView.setBackground(new Background(new BackgroundFill(Color.valueOf("#B88400"), new CornerRadii(20), new Insets(0))));
 
         innerCellView.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
         innerCellView.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
@@ -221,9 +197,9 @@ public class GameView extends StackPane implements Initializable {
 //        var keyFrame = new KeyFrame(Duration.millis(1000), new KeyValue());
 
         var translate = new TranslateTransition();
-        translate.setDuration(Duration.millis(1500));
+        translate.setDuration(Duration.millis(400));
         translate.setRate(3);
-        translate.setInterpolator(Interpolator.TANGENT(Duration.millis(1500), 9));
+        translate.setInterpolator(Interpolator.TANGENT(Duration.millis(200), 9));
 
         if (direction == Game.Direction.DOWN) {
             translate.setFromY(-sourceCellView.getHeight());
@@ -265,26 +241,18 @@ public class GameView extends StackPane implements Initializable {
     }
 
     private void buildNewNumberTransition(int row, int col, int newNumber) {
-        var text = Objects.requireNonNull(getCellView(row, col)).innerCellView.number_Label;
+        var cellView = getCellView(row, col);
+        if (cellView == null) return;
+        var text = cellView.innerCellView.number_Label;
         var tr = new TextSizeTransition(text, 0, 40, Duration.millis(100));
         tr.statusProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == Animation.Status.RUNNING) {
+            if (newValue == Animation.Status.RUNNING)
                 text.setText(String.valueOf(newNumber));
-            }
         });
-        addTransition(-10, tr);
+        generateNewNumberTransition = tr;
     }
 
-    private Transition generateNewNumberTransition = null;
-
     private void addTransition(int id, Transition transition) {
-        // Adding the newNumberAnimation
-        // This animation will be the last animation
-        if (id == -10) {
-            generateNewNumberTransition = transition;
-            generateNewNumberTransition.setOnFinished(event -> animationFinished.set(true));
-            return;
-        }
         animations.compute(id, (integer, sequentialTransition) -> {
             if (sequentialTransition == null) sequentialTransition = new SequentialTransition();
             sequentialTransition.getChildren().add(transition);
@@ -299,18 +267,23 @@ public class GameView extends StackPane implements Initializable {
         p.play();
     }
 
-    private CellView getCellView(int targetRow, int targetCol) {
-        for (byte row = 0; row < game.terrain.length; row++) {
-            for (byte col = 0; col < game.terrain.length; col++) {
-                for (var child : game_GridPane.getChildren()) {
-                    if (child instanceof CellView cellView) {
-                        if (GridPane.getRowIndex(child) == targetRow && GridPane.getColumnIndex(child) == targetCol) {
+    private @Nullable CellView getCellView(int targetRow, int targetCol) {
+        for (byte row = 0; row < game.terrain.length; row++)
+            for (byte col = 0; col < game.terrain.length; col++)
+                for (var child : game_GridPane.getChildren())
+                    if (child instanceof CellView cellView)
+                        if (GridPane.getRowIndex(child) == targetRow && GridPane.getColumnIndex(child) == targetCol)
                             return cellView;
-                        }
+        return null;
+    }
+
+    private @Nullable Pair<ColumnConstraints, RowConstraints> getRowAndColConstraints(Node node, GridPane gridPane) {
+        for (byte i = 0; i < gridPane.getColumnConstraints().size(); i++)
+            for (byte j = 0; j < gridPane.getRowConstraints().size(); j++)
+                for (Node ignored : gridPane.getChildren())
+                    if (GridPane.getRowIndex(node) == j && GridPane.getColumnIndex(node) == i) {
+                        return new Pair<>(gridPane.getColumnConstraints().get(i), gridPane.getRowConstraints().get(j));
                     }
-                }
-            }
-        }
         return null;
     }
 
