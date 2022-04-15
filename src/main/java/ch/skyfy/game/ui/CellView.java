@@ -21,7 +21,7 @@ public class CellView extends StackPane implements Initializable {
     }
 
     public CellView() {
-        FXMLUtils.loadFXML(this);
+        FXMLUtils.loadFXML(CellView.this);
     }
 
     @Override

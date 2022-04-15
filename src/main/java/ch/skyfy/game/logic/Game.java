@@ -45,125 +45,6 @@ public class Game {
 //        generateNewNumber();
     }
 
-    public void moveOLD(Direction direction) {
-        var terrainCopy = Arrays.stream(terrain).map(int[]::clone).toArray(value -> terrain.clone());
-        for (byte i = 0; i < terrain.length; i++) {
-            var cells = new int[terrain[0].length];
-            if (direction == Direction.LEFT || direction == Direction.RIGHT) {
-                System.arraycopy(terrain[i], 0, cells, 0, terrain.length);
-                cells = mergeCellsOLD(cells, direction, i);
-                for (byte j = 0; j < cells.length; j++)
-                    terrain[i][j] = cells[j];
-
-            } else {
-                for (byte j = 0; j < cells.length; j++)
-                    cells[j] = terrain[j][i];
-                cells = mergeCellsOLD(cells, direction, i);
-                for (byte j = 0; j < cells.length; j++)
-                    terrain[j][i] = cells[j];
-            }
-        }
-        generateNewNumberIfRequired(terrainCopy);
-    }
-
-    public int[] mergeCellsOLD(int[] cells, Direction direction, int colOrRow) {
-        if (Arrays.stream(cells).allMatch(s -> s == 0)) return cells;
-        var alreadyMultiply2 = new ArrayList<Integer>(2);
-
-
-        for (int j = 0; j <= 4; j++) {
-
-            if (direction == Direction.UP || direction == Direction.LEFT) {
-                for (var i = 0; i < cells.length; i++) {
-                    if (i + 1 < cells.length) {
-                        var cell = cells[i];
-                        var nextCell = cells[i + 1];
-
-                        if (cell != nextCell && cell != 0 && nextCell != 0) continue;
-                        if (cell == 0 && nextCell == 0) continue;
-
-                        if (cell == nextCell) {
-
-                            if (alreadyMultiply2.contains(i) || alreadyMultiply2.contains(i+1)) continue;
-                            alreadyMultiply2.add(i);
-
-                            cells[i] = cell * 2;
-                            cells[i + 1] = 0;
-                            if (direction == Direction.UP) {
-                                cellsMergedEvent.merged(i + 1, colOrRow, i, colOrRow, cells[i], direction, colOrRow); //UP
-                                terrain[i][colOrRow] = cell * 2;
-                                terrain[i + 1][colOrRow] = 0;
-                            } else {
-                                cellsMergedEvent.merged(colOrRow, i + 1, colOrRow, i, cells[i], direction, colOrRow); // LEFT
-                                terrain[colOrRow][i] = cell * 2;
-                                terrain[colOrRow][i + 1] = 0;
-                            }
-                        } else {
-                            if (cell == 0) {
-                                cells[i] = nextCell;
-                                cells[i + 1] = 0;
-                                if (direction == Direction.UP) {
-                                    cellsMergedEvent.merged(i + 1, colOrRow, i, colOrRow, cells[i], direction, colOrRow); //UP
-                                    terrain[i][colOrRow] = nextCell;
-                                    terrain[i + 1][colOrRow] = 0;
-                                } else {
-                                    cellsMergedEvent.merged(colOrRow, i + 1, colOrRow, i, cells[i], direction, colOrRow); // LEFT
-                                    terrain[colOrRow][i] = nextCell;
-                                    terrain[colOrRow][i + 1] = 0;
-                                }
-                            }
-                        }
-
-                    }
-                }
-            } else {
-                for (var i = (cells.length - 1); i >= 0; i--) {
-                    if (i - 1 >= 0) {
-                        var cell = cells[i];
-                        var previousCell = cells[i - 1];
-
-                        if (cell != previousCell && cell != 0 && previousCell != 0) continue;
-                        if (cell == 0 && previousCell == 0) continue;
-
-                        if (cell == previousCell) {
-
-                            if (alreadyMultiply2.contains(i) || alreadyMultiply2.contains(i - 1)) continue;
-                            alreadyMultiply2.add(i);
-
-                            cells[i] = cell * 2;
-                            cells[i - 1] = 0;
-                            if (direction == Direction.DOWN) {
-                                cellsMergedEvent.merged(i - 1, colOrRow, i, colOrRow, cells[i], direction, colOrRow); //DOWN
-                                terrain[i][colOrRow] = cell * 2;
-                                terrain[i - 1][colOrRow] = 0;
-                            } else if (direction == Direction.RIGHT) {
-                                cellsMergedEvent.merged(colOrRow, i - 1, colOrRow, i, cells[i], direction, colOrRow); // RIGHT
-                                terrain[colOrRow][i] = cell * 2;
-                                terrain[colOrRow][i - 1] = 0;
-                            }
-                        } else {
-                            if (cell == 0) {
-                                cells[i] = previousCell;
-                                cells[i - 1] = 0;
-                                if (direction == Direction.DOWN) {
-                                    cellsMergedEvent.merged(i - 1, colOrRow, i, colOrRow, cells[i], direction, colOrRow); //DOWN
-                                    terrain[i][colOrRow] = previousCell;
-                                    terrain[i - 1][colOrRow] = 0;
-                                } else if (direction == Direction.RIGHT) {
-                                    cellsMergedEvent.merged(colOrRow, i - 1, colOrRow, i, cells[i], direction, colOrRow); // RIGHT
-                                    terrain[colOrRow][i] = previousCell;
-                                    terrain[colOrRow][i - 1] = 0;
-                                }
-                            }
-                        }
-
-                    }
-                }
-            }
-
-        }
-        return cells;
-    }
 
     public void move(Direction direction) {
         var terrainCopy = Arrays.stream(terrain).map(int[]::clone).toArray(value -> terrain.clone());
@@ -265,6 +146,10 @@ public class Game {
 
     }
 
+    public void generateNewNumber2(){
+//        var pairs = new ArrayList<Pair<Integer, Integer>>();
+
+    }
 
     public void generateNewNumberIfRequired(int[][] oldTerrain) {
         for (byte row = 0; row < terrain.length; row++) {

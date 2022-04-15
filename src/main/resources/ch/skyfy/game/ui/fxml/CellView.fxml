@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.StackPane?>
 <?import ch.skyfy.game.ui.InnerCellView?>
+<?import javafx.scene.layout.StackPane?>
 <fx:root fx:id="root_StackPane" stylesheets="@../css/CellView.css" type="StackPane"
          xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
-   <InnerCellView fx:id="innerCellView"/>
+    <InnerCellView fx:id="innerCellView"/>
 </fx:root>

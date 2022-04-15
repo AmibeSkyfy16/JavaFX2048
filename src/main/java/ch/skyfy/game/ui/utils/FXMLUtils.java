@@ -1,6 +1,7 @@
 package ch.skyfy.game.ui.utils;
 
 import ch.skyfy.game.Main;
+import ch.skyfy.game.ui.CellView;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.JavaFXBuilderFactory;
 import javafx.scene.Node;
@@ -11,10 +12,26 @@ import java.lang.reflect.InvocationTargetException;
 
 public class FXMLUtils {
     public static <R> void loadFXML(R view){
+        loadFXML("ui/fxml/"+view.getClass().getSimpleName() + ".fxml", view);
+    }
+
+    public static <R> void loadFXML(String path, R view){
         try {
-            new FXMLLoader(Main.class.getResource("ui/fxml/"+view.getClass().getSimpleName() + ".fxml")){{
+            new FXMLLoader(Main.class.getResource(path)){{
                 setController(view);
                 setRoot(view);
+            }}.load();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void loadFXML2(CellView cellView){
+        System.out.println("view: " + cellView.getClass());
+        try {
+            new FXMLLoader(Main.class.getResource("ui/fxml/"+cellView.getClass().getSimpleName() + ".fxml")){{
+                setController(cellView);
+                setRoot(cellView);
             }}.load();
         } catch (IOException e) {
             e.printStackTrace();

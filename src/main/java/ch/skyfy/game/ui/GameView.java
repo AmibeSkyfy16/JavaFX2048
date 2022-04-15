@@ -4,6 +4,7 @@ import ch.skyfy.game.logic.Game;
 import ch.skyfy.game.ui.utils.FXMLUtils;
 import javafx.animation.*;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.HPos;
@@ -58,8 +59,6 @@ public class GameView extends StackPane implements Initializable {
             c.setHalignment(HPos.CENTER);
             c.setHgrow(Priority.SOMETIMES);
             game_GridPane.getColumnConstraints().add(c);
-        }
-        for (int i1 = 0; i1 < 4; i1++) {
             var r = new RowConstraints();
             r.setPercentHeight(percent);
             r.setMinHeight(USE_COMPUTED_SIZE);
@@ -70,10 +69,56 @@ public class GameView extends StackPane implements Initializable {
             game_GridPane.getRowConstraints().add(r);
         }
 
+
         // Adding cell
         for (int i = 0; i < game_GridPane.getColumnConstraints().size(); i++)
-            for (int i1 = 0; i1 < game_GridPane.getRowConstraints().size(); i1++)
-                game_GridPane.add(new CellView(), i, i1);
+            for (int i1 = 0; i1 < game_GridPane.getRowConstraints().size(); i1++) {
+                var col = game_GridPane.getColumnConstraints().get(i);
+                var row = game_GridPane.getRowConstraints().get(i1);
+                var cellView = new CellView();
+                game_GridPane.add(cellView, i, i1);
+
+                // Responsible and square cells
+                // -----------------------TEST 1 ----------------------\\
+//                var b = Bindings.createDoubleBinding(() -> {
+//                    var height = game_GridPane.getHeight() * (row.getPercentHeight() / 100);
+//                    var width = game_GridPane.getWidth() * (col.getPercentWidth() / 100);
+//                    var min = Double.min(height, width);
+//                    return min;
+//                }, game_GridPane.heightProperty(), game_GridPane.widthProperty(), this.widthProperty());
+//                cellView.prefWidthProperty().bind(b);
+//                cellView.prefHeightProperty().bind(b);
+//                cellView.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+//                cellView.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
+//                game_GridPane.add(cellView, i, i1);
+                // -----------------------TEST 1 ----------------------\\
+                // RESULT -> BUG
+
+//                game_GridPane.layoutBoundsProperty().addListener((observable, oldValue, newValue) -> {
+//                    var height = game_GridPane.getHeight() * (row.getPercentHeight() / 100);
+//                    var width = game_GridPane.getWidth() * (col.getPercentWidth() / 100);
+//                    var min = Double.min(height, width);
+//                    cellView.setPrefSize(min, min);
+//                });
+////
+//                cellView.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+//                cellView.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
+//                game_GridPane.add(cellView, i, i1);
+//                game_GridPane.add(new CellView() {{
+////                    var b = Bindings.createDoubleBinding(() -> {
+////                        var height = game_GridPane.getHeight() * (row.getPercentHeight() / 100);
+////                        var width = game_GridPane.getWidth() * (col.getPercentWidth() / 100);
+////                        var min = Double.min(height, width);
+////                        return min;
+////                    }, game_GridPane.heightProperty(), game_GridPane.widthProperty());
+////                    prefWidthProperty().bind(b);
+////                    prefHeightProperty().bind(b);
+////                    setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+////                    setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
+//                }}, i, i1);
+            }
+
+
     }
 
     private void update() {
