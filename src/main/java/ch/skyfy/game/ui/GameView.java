@@ -42,9 +42,7 @@ public class GameView extends StackPane implements Initializable {
     private final AtomicBoolean animationFinished = new AtomicBoolean(true);
 
     public GameView() {
-        game = new Game();
-        game.cellsMergedEvent = this::buildMergeTransition2;
-        game.newNumberEvent = this::buildNewNumberTransition;
+        game = new Game(this::buildMergeTransition2, this::buildNewNumberTransition);
         FXMLUtils.loadFXML(this);
     }
 
@@ -52,6 +50,7 @@ public class GameView extends StackPane implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         buildGameGridPane();
         registerEvents();
+        game.generateNewNumber();
         update();
     }
 
@@ -244,7 +243,8 @@ public class GameView extends StackPane implements Initializable {
         var cellView = getCellView(row, col);
         if (cellView == null) return;
         var text = cellView.innerCellView.number_Label;
-        var tr = new TextSizeTransition(text, 0, 40, Duration.millis(100));
+        var tr = new TextSizeTransition(text, 0, 40, Duration.millis(2000));
+        tr.setOnFinished(event -> animationFinished.set(true));
         tr.statusProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == Animation.Status.RUNNING)
                 text.setText(String.valueOf(newNumber));
@@ -268,12 +268,10 @@ public class GameView extends StackPane implements Initializable {
     }
 
     private @Nullable CellView getCellView(int targetRow, int targetCol) {
-        for (byte row = 0; row < game.terrain.length; row++)
-            for (byte col = 0; col < game.terrain.length; col++)
-                for (var child : game_GridPane.getChildren())
-                    if (child instanceof CellView cellView)
-                        if (GridPane.getRowIndex(child) == targetRow && GridPane.getColumnIndex(child) == targetCol)
-                            return cellView;
+        for (var child : game_GridPane.getChildren())
+        if (child instanceof CellView cellView)
+            if (GridPane.getRowIndex(child) == targetRow && GridPane.getColumnIndex(child) == targetCol)
+                return cellView;
         return null;
     }
 
