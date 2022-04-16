@@ -31,5 +31,17 @@ application {
 
 javafx {
     version = "18"
-//    modules = ['javafx.controls', 'javafx.fxml', 'javafx.graphics']
+}
+
+run{
+    jvmArgs = [
+            "--add-exports=javafx.controls/com.sun.javafx.scene.control.skin=ALL-UNNAMED",
+    ]
+}
+
+compileJava{
+    options.compilerArgs.addAll([
+            "--add-exports",
+            "javafx.controls/com.sun.javafx.scene.control.skin=ALL-UNNAMED"
+    ])
 }

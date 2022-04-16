@@ -8,8 +8,9 @@ import javafx.util.Duration;
 
 public class TextSizeTransition extends Transition {
 
-    private Labeled UIcontrol; // a little generic -> subclasses: ButtonBase, Cell, Label, TitledPane
-    private int start, end; // initial and final size of the text
+    private final Labeled UIcontrol; // a little generic -> subclasses: ButtonBase, Cell, Label, TitledPane
+    private final int start;
+    private final int end; // initial and final size of the text
 
     public TextSizeTransition(Labeled UIcontrol, int start, int end, Duration duration) {
         this.UIcontrol = UIcontrol;
@@ -30,6 +31,7 @@ public class TextSizeTransition extends Transition {
         int size = (int) ((end * frac) + start);
         if(size<=end) {
             UIcontrol.setFont(Font.font(size));
+//            UIcontrol.setStyle("-fx-font-size: " + size);
         }else { // once the size reaches the destination (i.e. end value)
             // back to the start size if you want
             //UIcontrol.setFont(Font.font(start));
