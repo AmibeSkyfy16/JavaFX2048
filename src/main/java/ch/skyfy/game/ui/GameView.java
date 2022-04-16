@@ -263,15 +263,18 @@ public class GameView extends StackPane implements Initializable {
     private void playTransition() {
         var p = new ParallelTransition();
         p.getChildren().addAll(animations.values());
-        p.setOnFinished(event -> generateNewNumberTransition.play());
+        p.setOnFinished(event -> {
+            if (generateNewNumberTransition != null)
+                generateNewNumberTransition.play();
+        });
         p.play();
     }
 
     private @Nullable CellView getCellView(int targetRow, int targetCol) {
         for (var child : game_GridPane.getChildren())
-        if (child instanceof CellView cellView)
-            if (GridPane.getRowIndex(child) == targetRow && GridPane.getColumnIndex(child) == targetCol)
-                return cellView;
+            if (child instanceof CellView cellView)
+                if (GridPane.getRowIndex(child) == targetRow && GridPane.getColumnIndex(child) == targetCol)
+                    return cellView;
         return null;
     }
 

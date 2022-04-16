@@ -1,4 +1,4 @@
-package ch.skyfy.game;
+package ch.skyfy.game.events;
 
 import ch.skyfy.game.logic.Game;
 import ch.skyfy.game.ui.GameView;
