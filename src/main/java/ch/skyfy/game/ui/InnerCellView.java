@@ -2,6 +2,8 @@ package ch.skyfy.game.ui;
 
 import ch.skyfy.game.ui.utils.FXMLUtils;
 import ch.skyfy.game.ui.utils.Utils;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;

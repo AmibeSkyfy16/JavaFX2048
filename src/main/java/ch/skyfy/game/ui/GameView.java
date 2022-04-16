@@ -2,7 +2,6 @@ package ch.skyfy.game.ui;
 
 import ch.skyfy.game.logic.Game;
 import ch.skyfy.game.ui.utils.FXMLUtils;
-import ch.skyfy.game.ui.utils.Utils;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -128,57 +127,6 @@ public class GameView extends StackPane implements Initializable {
         });
     }
 
-    @SuppressWarnings({"ConstantConditions", "unused"})
-    private void buildMergeTransition(int srcRow, int srcCol, int destRow, int destCol, int number, Game.Direction direction, int id) {
-        var sourceCellView = getCellView(srcRow, srcCol);
-        var destCellView = getCellView(destRow, destCol);
-
-        var innerCellView = new InnerCellView();
-
-        innerCellView.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
-        innerCellView.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
-        innerCellView.setPrefHeight(sourceCellView.innerCellView.getHeight());
-        innerCellView.setPrefWidth(sourceCellView.innerCellView.getWidth());
-        innerCellView.number_Label.setText(sourceCellView.innerCellView.number_Label.getText());
-
-        var translate = new TranslateTransition();
-        translate.setDuration(Duration.millis(1500));
-
-        if (direction == Game.Direction.DOWN) {
-            translate.setByY(sourceCellView.getHeight());
-            innerCellView.setTranslateY(-sourceCellView.getHeight());
-        } else if (direction == Game.Direction.UP) {
-            translate.setByY(-sourceCellView.getHeight());
-            innerCellView.setTranslateY(sourceCellView.getHeight());
-        } else if (direction == Game.Direction.RIGHT) {
-            translate.setByX(sourceCellView.getWidth());
-            innerCellView.setTranslateX(-sourceCellView.getWidth());
-        } else {
-            translate.setByX(-sourceCellView.getWidth());
-            innerCellView.setTranslateX(sourceCellView.getWidth());
-        }
-
-        translate.setNode(innerCellView);
-
-        translate.statusProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == Animation.Status.STOPPED)
-                Platform.runLater(() -> {
-                    destCellView.innerCellView.number_Label.setText(String.valueOf(number));
-                    game_GridPane.getChildren().remove(innerCellView);
-                });
-            else if (newValue == Animation.Status.RUNNING) {
-                Platform.runLater(() -> {
-                    game_GridPane.add(innerCellView, destCol, destRow);
-                    innerCellView.number_Label.setText(String.valueOf(sourceCellView.innerCellView.number_Label.getText()));
-                    innerCellView.setViewOrder(-1);
-                    sourceCellView.innerCellView.number_Label.setText("0");
-                });
-            }
-        });
-
-        addTransition(id, translate);
-    }
-
     @SuppressWarnings("ConstantConditions")
     private void buildMergeTransition2(int srcRow, int srcCol, int destRow, int destCol, int number, Game.Direction direction, int id) {
         var sourceCellView = getCellView(srcRow, srcCol);
@@ -224,7 +172,7 @@ public class GameView extends StackPane implements Initializable {
                 Platform.runLater(() -> {
                     destCellView.innerCellView.number_Label.setText(String.valueOf(number));
                     game_GridPane.getChildren().remove(innerCellView);
-                    Utils.resizeText(destCellView.innerCellView.getHeight(), destCellView.innerCellView.getWidth(), destCellView.innerCellView.number_Label);
+//                    Utils.resizeText(destCellView.innerCellView.getHeight(), destCellView.innerCellView.getWidth(), destCellView.innerCellView.number_Label);
                 });
             else if (newValue == Animation.Status.RUNNING) {
                 Platform.runLater(() -> {
@@ -255,11 +203,11 @@ public class GameView extends StackPane implements Initializable {
         var parallelTransition = new ParallelTransition();
         parallelTransition.setOnFinished(event -> animationFinished.set(true));
         parallelTransition.statusProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == Animation.Status.RUNNING) {
+            if (newValue == Animation.Status.RUNNING)
                 text.setText(String.valueOf(newNumber));
-            }else if(newValue == Animation.Status.STOPPED){
-                Utils.resizeText(cellView.innerCellView.getHeight(), cellView.innerCellView.getWidth(), cellView.innerCellView.number_Label);
-            }
+//            }else if(newValue == Animation.Status.STOPPED){
+//                Utils.resizeText(cellView.innerCellView.getHeight(), cellView.innerCellView.getWidth(), cellView.innerCellView.number_Label);
+//            }
         });
         parallelTransition.getChildren().addAll(rotateTransition, tr);
 

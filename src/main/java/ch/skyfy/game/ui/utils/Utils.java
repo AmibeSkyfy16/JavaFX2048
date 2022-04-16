@@ -84,7 +84,7 @@ public class Utils {
         if (newHeight == 0) return -1;
 
         var size = label.getFont().getSize();
-        var margin = newHeight * (20d / 100d);
+        var margin = newHeight * (25d / 100d);
 
         var newText = new Text(label.getText());
         newText.setFont(Font.font(label.getFont().getFamily(), size));
@@ -115,7 +115,7 @@ public class Utils {
         if (newWidth == 0) return -1;
 
         var size = label.getFont().getSize();
-        var margin = newWidth * (20d / 100d);
+        var margin = newWidth * (25d / 100d);
 
         var newText = new Text(label.getText());
         newText.setFont(Font.font(label.getFont().getFamily(), size));
