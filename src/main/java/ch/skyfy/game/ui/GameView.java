@@ -2,24 +2,22 @@ package ch.skyfy.game.ui;
 
 import ch.skyfy.game.logic.Game;
 import ch.skyfy.game.ui.utils.FXMLUtils;
+import ch.skyfy.game.ui.utils.Utils;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.HPos;
 import javafx.geometry.VPos;
-import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
-import javafx.scene.text.Font;
 import javafx.util.Duration;
 import javafx.util.Pair;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +50,7 @@ public class GameView extends StackPane implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         buildGameGridPane();
         registerEvents();
-        game.generateNewNumber();
+        game.generateNewNumber(true);
         update();
     }
 
@@ -106,7 +104,8 @@ public class GameView extends StackPane implements Initializable {
                 for (var child : game_GridPane.getChildren()) {
                     if (child instanceof CellView cellView) {
                         if (GridPane.getRowIndex(child) == row && GridPane.getColumnIndex(child) == col) {
-                            cellView.innerCellView.number_Label.setText(String.valueOf(game.terrain[row][col] == 0 ? "" : game.terrain[row][col]));
+                            // We add 3 spaces, so the animation of the new generated cell have the correct font size
+                            cellView.innerCellView.number_Label.setText(String.valueOf(game.terrain[row][col] == 0 ? "   " : game.terrain[row][col]));
                         }
                     }
                 }
@@ -195,11 +194,8 @@ public class GameView extends StackPane implements Initializable {
         innerCellView.setPrefWidth(sourceCellView.innerCellView.getWidth());
         innerCellView.number_Label.setText(sourceCellView.innerCellView.number_Label.getText());
 
-//        var timeline = new Timeline();
-//        var keyFrame = new KeyFrame(Duration.millis(1000), new KeyValue());
-
         var translate = new TranslateTransition();
-        translate.setDuration(Duration.millis(1400));
+        translate.setDuration(Duration.millis(800));
         translate.setRate(3);
         translate.setInterpolator(Interpolator.TANGENT(Duration.millis(200), 9));
 
@@ -228,13 +224,14 @@ public class GameView extends StackPane implements Initializable {
                 Platform.runLater(() -> {
                     destCellView.innerCellView.number_Label.setText(String.valueOf(number));
                     game_GridPane.getChildren().remove(innerCellView);
+                    Utils.resizeText(destCellView.innerCellView.getHeight(), destCellView.innerCellView.getWidth(), destCellView.innerCellView.number_Label);
                 });
             else if (newValue == Animation.Status.RUNNING) {
                 Platform.runLater(() -> {
                     game_GridPane.add(innerCellView, destCol, destRow);
                     innerCellView.number_Label.setText(String.valueOf(sourceCellView.innerCellView.number_Label.getText()));
                     innerCellView.setViewOrder(-1);
-                    sourceCellView.innerCellView.number_Label.setText("");
+                    sourceCellView.innerCellView.number_Label.setText("   ");
                 });
             }
         });
@@ -242,22 +239,16 @@ public class GameView extends StackPane implements Initializable {
         addTransition(id, translate);
     }
 
-    private void buildNewNumberTransition(int row, int col, int newNumber) {
+    private void buildNewNumberTransition(int row, int col, int newNumber, boolean firstTime) {
+        if (firstTime) return;
         var cellView = getCellView(row, col);
         if (cellView == null) return;
         var text = cellView.innerCellView.number_Label;
 
-        var tr = new TextSizeTransition(text, 0, 40, Duration.millis(800));
-//        tr.setOnFinished(event -> animationFinished.set(true));
-//        tr.statusProperty().addListener((observable, oldValue, newValue) -> {
-//            if (newValue == Animation.Status.RUNNING) {
-//                text.setId("");
-//                text.setText(String.valueOf(newNumber));
-//            }
-//        });
+        var tr = new TextSizeTransition(text, 0, (int) cellView.innerCellView.number_Label.getFont().getSize(), Duration.millis(600));
 
         var rotateTransition = new RotateTransition();
-        rotateTransition.setDuration(Duration.millis(900));
+        rotateTransition.setDuration(Duration.millis(700));
         rotateTransition.setNode(text);
         rotateTransition.setByAngle(360);
 
@@ -265,10 +256,9 @@ public class GameView extends StackPane implements Initializable {
         parallelTransition.setOnFinished(event -> animationFinished.set(true));
         parallelTransition.statusProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == Animation.Status.RUNNING) {
-//                var styleClass = text.getStyleClass();
-//                text.setTextFill(text.getTextFill());
-//                text.getStyleClass().clear();
                 text.setText(String.valueOf(newNumber));
+            }else if(newValue == Animation.Status.STOPPED){
+                Utils.resizeText(cellView.innerCellView.getHeight(), cellView.innerCellView.getWidth(), cellView.innerCellView.number_Label);
             }
         });
         parallelTransition.getChildren().addAll(rotateTransition, tr);
@@ -285,6 +275,10 @@ public class GameView extends StackPane implements Initializable {
     }
 
     private void playTransition() {
+        if (animations.values().isEmpty()) {
+            animationFinished.set(true);
+            return;
+        }
         var p = new ParallelTransition();
         p.getChildren().addAll(animations.values());
         p.setOnFinished(event -> generateNewNumberTransition.play());

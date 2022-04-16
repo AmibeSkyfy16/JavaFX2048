@@ -5,6 +5,7 @@ import ch.skyfy.game.events.NewNumberEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Game {
@@ -30,8 +31,15 @@ public class Game {
     }
 
     public void move(Direction direction) {
+        var terrainCopy = Arrays.stream(terrain).map(int[]::clone).toArray(value -> terrain.clone());
+
         moveImpl(direction);
-        generateNewNumber();
+
+        if(Arrays.deepEquals(terrainCopy, terrain)){
+            if(getAvailableCells().isEmpty())
+                System.out.println("YOU LOST");
+        }else
+            generateNewNumber(false);
     }
 
     public void moveImpl(Direction direction) {
@@ -84,17 +92,21 @@ public class Game {
 
     }
 
-    public void generateNewNumber() {
+    public void generateNewNumber(boolean firstTime) {
+        var availableCells = getAvailableCells();
+        var randomNumberIndexes = availableCells.get(ThreadLocalRandom.current().nextInt(availableCells.size()));
+        var newNumber = ThreadLocalRandom.current().nextInt(0, 2) == 0 ? 2 : 4;
+        newNumberEvent.newNumber(randomNumberIndexes[0], randomNumberIndexes[1], newNumber, firstTime);
+        terrain[randomNumberIndexes[0]][randomNumberIndexes[1]] = newNumber;
+    }
+
+    private List<int[]> getAvailableCells(){
         var indices = new ArrayList<int[]>();
         for (byte i = 0; i < terrain.length; i++)
             for (byte j = 0; j < terrain[i].length; j++)
                 if (terrain[i][j] == 0)
                     indices.add(new int[]{i, j});
-
-        var randomNumberIndexes = indices.get(ThreadLocalRandom.current().nextInt(indices.size()));
-        var newNumber = ThreadLocalRandom.current().nextInt(0, 2) == 0 ? 2 : 4;
-        newNumberEvent.newNumber(randomNumberIndexes[0], randomNumberIndexes[1], newNumber);
-        terrain[randomNumberIndexes[0]][randomNumberIndexes[1]] = newNumber;
+        return indices;
     }
 
     private void populateTerrain() {

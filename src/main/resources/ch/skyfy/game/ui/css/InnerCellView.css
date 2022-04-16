@@ -3,14 +3,8 @@
     -fx-background-radius: 10;
 }
 
-/*#number_Label{*/
-/*    -fx-font-family: "JetBrains Mono Medium";*/
-/*    -fx-font-size: 48;*/
-/*    -fx-text-fill: #f1faee;*/
-/*}*/
 .label{
     -fx-font-family: "JetBrains Mono Medium";
     -fx-font-size: 52;
     -fx-text-fill: #f1faee;
-    /*-fx-background-color: red;*/
 }

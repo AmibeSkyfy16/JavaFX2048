@@ -4,6 +4,6 @@
 <?import javafx.scene.layout.StackPane?>
 
 <fx:root fx:id="inner_StackPane" stylesheets="@../css/InnerCellView.css" type="StackPane" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
-    <Label fx:id="number_Label" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="0.0" prefWidth="0.0" text="0">
+    <Label fx:id="number_Label" alignment="CENTER" contentDisplay="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="0.0" prefWidth="0.0" text="0" textAlignment="CENTER" wrapText="true" StackPane.alignment="CENTER">
     </Label>
 </fx:root>
