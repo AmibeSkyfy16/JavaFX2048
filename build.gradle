@@ -30,7 +30,7 @@ application {
 }
 
 javafx {
-    version = "18"
+    version = 18
 }
 
 run{

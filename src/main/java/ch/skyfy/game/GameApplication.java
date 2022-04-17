@@ -8,14 +8,9 @@ import javafx.stage.Stage;
 public class GameApplication extends Application {
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setWidth(800);
-        primaryStage.setHeight(480);
+//        primaryStage.setWidth(800);
+//        primaryStage.setHeight(600);
         primaryStage.setScene(new Scene(new GameView()));
-
-        // some test for my custom layout (UniformGrid)
-//        primaryStage.setScene(new Scene(new UniformGridTestOne()));
-//        primaryStage.setScene(new Scene(new UniformGridTestTwo()));
-
         primaryStage.show();
     }
 

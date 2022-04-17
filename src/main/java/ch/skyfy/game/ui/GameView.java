@@ -31,7 +31,6 @@ public class GameView extends StackPane implements Initializable {
 
     /**
      * Each line will have a SequentialTransition transition
-     * If the key is -10, It's for the latest animation (the newNumberAnimation)
      */
     public final Map<Integer, SequentialTransition> animations = new HashMap<>();
 
