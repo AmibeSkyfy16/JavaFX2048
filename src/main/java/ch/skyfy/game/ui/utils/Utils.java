@@ -73,11 +73,16 @@ public class Utils {
      * @param label the label with the text to be resized
      */
     public static void resizeText(double newHeight, double newWidth, Label label){
+        var size = getCorrectSize(newHeight, newWidth, label);
+        if(size == -1)return;
+        label.setStyle("-fx-font-size: " + size);
+    }
+
+    public static double getCorrectSize(double newHeight, double newWidth, Label label){
         var sizeForHeight = getSizeForHeight(newHeight, label);
         var sizeForWidth = getSizeForWidth(newWidth, label);
-        if(sizeForHeight == -1 || sizeForWidth == -1)return;
-
-        label.setStyle("-fx-font-size: " + Math.min(sizeForHeight, sizeForWidth));
+        if(sizeForHeight == -1 || sizeForWidth == -1)return -1;
+        return Math.min(sizeForHeight, sizeForWidth);
     }
 
     private static double getSizeForHeight(double newHeight, Label label){

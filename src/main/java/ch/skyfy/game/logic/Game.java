@@ -35,11 +35,11 @@ public class Game {
 
         moveImpl(direction);
 
-        if(Arrays.deepEquals(terrainCopy, terrain)){
-            if(getAvailableCells().isEmpty())
+        if (Arrays.deepEquals(terrainCopy, terrain)) {
+            if (getAvailableCells().isEmpty())
                 System.out.println("YOU LOST");
-        }else
-            generateNewNumber(false);
+        } else
+            generateNewNumber();
     }
 
     public void moveImpl(Direction direction) {
@@ -92,15 +92,15 @@ public class Game {
 
     }
 
-    public void generateNewNumber(boolean firstTime) {
+    public void generateNewNumber() {
         var availableCells = getAvailableCells();
         var randomNumberIndexes = availableCells.get(ThreadLocalRandom.current().nextInt(availableCells.size()));
-        var newNumber = ThreadLocalRandom.current().nextInt(0, 2) == 0 ? 2 : 4;
-        newNumberEvent.newNumber(randomNumberIndexes[0], randomNumberIndexes[1], newNumber, firstTime);
+        var newNumber = ThreadLocalRandom.current().nextInt(0, 2) == 0 ? 200 : 400;
+        newNumberEvent.newNumber(randomNumberIndexes[0], randomNumberIndexes[1], newNumber);
         terrain[randomNumberIndexes[0]][randomNumberIndexes[1]] = newNumber;
     }
 
-    private List<int[]> getAvailableCells(){
+    private List<int[]> getAvailableCells() {
         var indices = new ArrayList<int[]>();
         for (byte i = 0; i < terrain.length; i++)
             for (byte j = 0; j < terrain[i].length; j++)
