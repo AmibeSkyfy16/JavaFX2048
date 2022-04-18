@@ -95,7 +95,7 @@ public class Game {
     public void generateNewNumber() {
         var availableCells = getAvailableCells();
         var randomNumberIndexes = availableCells.get(ThreadLocalRandom.current().nextInt(availableCells.size()));
-        var newNumber = ThreadLocalRandom.current().nextInt(0, 2) == 0 ? 200 : 400;
+        var newNumber = ThreadLocalRandom.current().nextInt(0, 2) == 0 ? 2 : 4;
         newNumberEvent.newNumber(randomNumberIndexes[0], randomNumberIndexes[1], newNumber);
         terrain[randomNumberIndexes[0]][randomNumberIndexes[1]] = newNumber;
     }

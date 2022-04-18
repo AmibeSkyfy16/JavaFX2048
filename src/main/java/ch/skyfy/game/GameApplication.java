@@ -8,8 +8,8 @@ import javafx.stage.Stage;
 public class GameApplication extends Application {
     @Override
     public void start(Stage primaryStage) {
-//        primaryStage.setWidth(800);
-//        primaryStage.setHeight(600);
+        primaryStage.setWidth(800);
+        primaryStage.setHeight(600);
         primaryStage.setScene(new Scene(new GameView()));
         primaryStage.show();
     }

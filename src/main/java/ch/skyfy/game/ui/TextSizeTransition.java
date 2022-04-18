@@ -2,8 +2,6 @@ package ch.skyfy.game.ui;
 
 import javafx.animation.Interpolator;
 import javafx.animation.Transition;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.control.Labeled;
 import javafx.util.Duration;
 

@@ -40,8 +40,22 @@ run{
 }
 
 compileJava{
+    options.encoding = 'UTF-8'
     options.compilerArgs.addAll([
             "--add-exports",
             "javafx.controls/com.sun.javafx.scene.control.skin=ALL-UNNAMED"
     ])
+}
+
+task buildPlugin(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'ch.skyfy.game.Main'
+    }
+    archiveFileName = "${rootProject.name}.jar"
+    dependsOn configurations.runtimeClasspath
+    from {
+        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+    }
+    from project.sourceSets.main.output
+
 }
